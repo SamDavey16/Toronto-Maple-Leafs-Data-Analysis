@@ -1,7 +1,10 @@
 import requests
 import pandas as pd
+import tkinter as tk
+from tkinter import *
+from pandastable import Table, TableModel
 
-df = pd.DataFrame(columns = ['Name', 'Time On Ice', 'Assists', 'Goals', 'Shots'])
+df = pd.DataFrame(columns = ['Name', 'Games Played', 'Time On Ice', 'Assists', 'Goals', 'Shots', 'Rank'])
 
 def get_goalie_ids():
     url = "https://statsapi.web.nhl.com/api/v1/teams/10/roster"
@@ -35,7 +38,7 @@ def get_player_ids():
 
 def get_player_data(get_player_ids, df):
     for x in get_player_ids():
-        link = "https://statsapi.web.nhl.com/api/v1/people/" + str(x) + "/stats?stats=statsSingleSeason&season=20202021"
+        link = "https://statsapi.web.nhl.com/api/v1/people/" + str(x) + "/stats?stats=statsSingleSeason&season=20212022"
         name_link = "https://statsapi.web.nhl.com/api/v1/people/" + str(x)
         name_link = requests.get(name_link)
         name_link = name_link.json()
@@ -49,13 +52,24 @@ def get_player_data(get_player_ids, df):
             splits = i["splits"]
             for i in splits:
                 stat = i["stat"]
-                goals = stat["goals"]
+                goals = int(stat["goals"])
                 toi = stat["timeOnIce"]
-                assists = stat["assists"]
-                shots = stat["goals"]
-                new_row = {'Name':fullname, 'Time On Ice':toi, 'Assists':assists, 'Goals':goals, 'Shots':shots}
+                time = ''.join(x for x in toi if x.isdigit())
+                time = int(time[:-2])
+                assists = int(stat["assists"])
+                shots = int(stat["shots"])
+                games_played = int(stat["games"])
+                try:
+                    rank = games_played / goals + shots + assists
+                except: # exception for the division by zero error for when there's no stats
+                    rank = 0
+                new_row = {'Name':fullname, 'Games Played':games_played, 'Time On Ice':toi, 'Assists':assists, 'Goals':goals, 'Shots':shots, 'Rank':rank}
                 df = df.append(new_row, ignore_index=True)
-    with pd.option_context('display.max_rows', None, 'display.max_columns', None):  
+    with pd.option_context('display.max_rows', None, 'display.max_columns', None):
+        df = df.sort_values(by=['Rank'], ascending=False)
         print(df)
+        
+
+
                 
 get_player_data(get_player_ids, df)
