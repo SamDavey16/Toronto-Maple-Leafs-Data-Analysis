@@ -20,8 +20,8 @@ Austony = []
 seasons = ["20212022"]
 inname = input("Enter name: ")
 for season in seasons:
-    nyi_schedule = requests.get("https://statsapi.web.nhl.com/api/v1/schedule?season="+season+"&teamId=10&gameType=R")
-    schedule = nyi_schedule.json()
+    tor_schedule = requests.get("https://statsapi.web.nhl.com/api/v1/schedule?season="+season+"&teamId=10&gameType=R")
+    schedule = tor_schedule.json()
     schedule = schedule["dates"]
 
     game_ids=[]
@@ -41,25 +41,8 @@ for season in seasons:
         content = url.json()
 
         event = content["liveData"]
-        game_data = content["gameData"]
-        date = game_data["datetime"]
-        datetime = date["dateTime"]
-        datetime = datetime[0:10]
-        teams = game_data["teams"]
-        away = teams["away"]
-        home = teams["home"]
-        away_team = away["abbreviation"]
-        home_team = home["abbreviation"]
         plays = event["plays"]
         all_plays = plays["allPlays"]
-
-        if home_team == "TOR":
-            team_to_chart = home_team
-        else:
-            team_to_chart = away_team
-        shot_attempts = 0
-        sog=0
-        goals=0
         for i in all_plays:
             result = i["result"]
             event = result["event"]
