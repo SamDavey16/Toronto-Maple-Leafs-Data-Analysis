@@ -85,5 +85,5 @@ kde = sns.kdeplot(
 )
 
 
-plt.title(inname + " Goals: 2021-2022 ")
+plt.title(inname + " Goals: 2021-2022")
 plt.show()
