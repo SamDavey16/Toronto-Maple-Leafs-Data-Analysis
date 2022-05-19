@@ -27,7 +27,7 @@ def heat_map(inname):
     Austony = []
 
     seasons = ["20212022"]
-    #inname = input("Enter name: ")
+    print("Loading heat map...")
     for season in seasons:
         tor_schedule = requests.get("https://statsapi.web.nhl.com/api/v1/schedule?season="+season+"&teamId=10&gameType=R")
         schedule = tor_schedule.json()
@@ -187,8 +187,6 @@ def menu():
                         games_played = int(stat["games"])
                         new_row = {'Name':fullname, 'Games Played':games_played, 'Time On Ice':toi, 'Assists':assists, 'Goals':goals, 'Shots':shots}
                         individual_df = individual_df.append(new_row, ignore_index=True)
-                        #with pd.option_context('display.max_rows', None, 'display.max_columns', None):
-        #print(individual_df)
         show(individual_df)
         heat_map(n)
 
@@ -274,7 +272,6 @@ def menu():
         print(goalie_df)
 
     df.set_index("Name")
-    #show(df)
 
     btn = Button(root,
              text ="Analyse individual player data",
@@ -288,7 +285,6 @@ def menu():
     btn2.pack(pady = 10)
     btn2.place(x=770, y=300)
 
-    #get_player_data(get_player_ids, df)
     root.mainloop()
 
 menu()
