@@ -3,8 +3,6 @@ import pandas as pd
 import tkinter as tk
 from tkinter import *
 from tkinter import ttk
-import tabloo
-#from pandastable import Table, TableModel
 from pandasgui import show
 import matplotlib.pyplot as plt
 import requests
