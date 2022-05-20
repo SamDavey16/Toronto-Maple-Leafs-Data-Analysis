@@ -8,7 +8,7 @@ import matplotlib.pyplot as plt
 import requests
 from matplotlib import image
 from hockey_rink import NHLRink
-from PIL import Image
+from PIL import ImageTk, Image
 from matplotlib import cm
 from matplotlib.patches import Circle, Rectangle, Arc, ConnectionPatch
 from matplotlib.patches import Polygon
@@ -16,6 +16,7 @@ from matplotlib.collections import PatchCollection
 from matplotlib.path import Path
 from matplotlib.patches import PathPatch
 import seaborn as sns
+#if there is a module error for win32api run: pip install pypiwin32
 
 def heat_map(inname):
     fig=plt.figure(figsize=(10,10))
@@ -103,28 +104,44 @@ def menu():
 
     root = tk.Tk()
     root.title("Player Data")
-    tabControl = ttk.Notebook(root)
-    tab1 = ttk.Frame(tabControl)
-    tab2 = ttk.Frame(tabControl)
-    tabControl.add(tab1, text='Players')
-    tabControl.add(tab2, text='Goalies')
-    tabControl.pack(expand=1, fill="both")
     
-    root.geometry("1000x1000")
+    root.geometry("800x800")
     root.pack_propagate(False) 
     root.resizable(0, 0) 
 
-    frame1 = tk.LabelFrame(root, text="Player Data")
-    frame1.place(height=500, width=500)
+    def goal_rank(goal_list, goal, name):
+        goal_list.sort()
+        i = 0
+        for l in goal_list:
+            if l < goal:
+                i += 1
+            else:
+                percentile = i / len(goal_list) * 100
+        pos = len(goal_list) - i
+        print(name, "is #", pos, "for goals with a percentile rank of:", percentile)
 
-    tv1 = ttk.Treeview(frame1)
-    tv1.place(relheight=1, relwidth=1) 
+    def assist_rank(assist_list, assists, name):
+        assist_list.sort()
+        i = 0
+        for l in assist_list:
+            if l < assists:
+                i += 1
+            else:
+                percentile2 = i / len(assist_list) * 100
+        pos = len(assist_list) - i
+        print(name, "is #", pos, "for assists with a percentile rank of:", percentile2)
 
-    treescrolly = tk.Scrollbar(frame1, orient="vertical", command=tv1.yview) 
-    treescrollx = tk.Scrollbar(frame1, orient="horizontal", command=tv1.xview) 
-    tv1.configure(xscrollcommand=treescrollx.set, yscrollcommand=treescrolly.set) 
-    treescrollx.pack(side="bottom", fill="x") 
-    treescrolly.pack(side="right", fill="y") 
+    def shot_rank(shot_list, shots, name):
+        shot_list.sort()
+        i = 0
+        percent = 0
+        for l in shot_list:
+            if l < shots:
+                i += 1
+            else:
+                percent = i / len(shot_list) * 100
+        pos = len(shot_list) - i
+        print(name, "is #", pos, "for shots with a percentile rank of:", percent)
 
     def get_goalie_ids():
         url = "https://statsapi.web.nhl.com/api/v1/teams/10/roster"
@@ -158,6 +175,9 @@ def menu():
 
     def individual_player_data(get_player_ids, individual_df, get_goalie_ids):
         n = input("Enter player name: ")
+        goal_list = []
+        shot_list = []
+        assist_list = []
         for x in get_player_ids():
             link = "https://statsapi.web.nhl.com/api/v1/people/" + str(x) + "/stats?stats=statsSingleSeason&season=20212022"
             name_link = "https://statsapi.web.nhl.com/api/v1/people/" + str(x)
@@ -167,6 +187,19 @@ def menu():
             for l in people:
                 fullname = l["fullName"]
             if fullname != n:
+                link = requests.get(link)
+                link = link.json()
+                stats = link["stats"]
+                for i in stats:
+                    splits = i["splits"]
+                    for i in splits:
+                        stat = i["stat"]
+                        goals = int(stat["goals"])
+                        goal_list.append(goals)
+                        assists = int(stat["assists"])
+                        assist_list.append(assists)
+                        shots = int(stat["shots"])
+                        shot_list.append(shots)
                 continue
             else:
                 link = requests.get(link)
@@ -176,17 +209,24 @@ def menu():
                     splits = i["splits"]
                     for i in splits:
                         stat = i["stat"]
-                        goals = int(stat["goals"])
+                        goal = int(stat["goals"])
+                        goal_list.append(goal)
                         toi = stat["timeOnIce"]
                         time = ''.join(x for x in toi if x.isdigit())
                         time = int(time[:-2])
-                        assists = int(stat["assists"])
-                        shots = int(stat["shots"])
+                        assist = int(stat["assists"])
+                        assist_list.append(assist)
+                        shot = int(stat["shots"])
+                        shot_list.append(shot)
                         games_played = int(stat["games"])
-                        new_row = {'Name':fullname, 'Games Played':games_played, 'Time On Ice':toi, 'Assists':assists, 'Goals':goals, 'Shots':shots}
+                        new_row = {'Name':fullname, 'Games Played':games_played, 'Time On Ice':toi, 'Assists':assist, 'Goals':goal, 'Shots':shot}
                         individual_df = individual_df.append(new_row, ignore_index=True)
         show(individual_df)
         heat_map(n)
+        goal_rank(goal_list, goal, n)
+        assist_rank(assist_list, assist, n)
+        shot_rank(shot_list, shot, n)
+
 
     def get_player_data(get_player_ids, df):
         for x in get_player_ids():
@@ -212,7 +252,7 @@ def menu():
                     shots = int(stat["shots"])
                     games_played = int(stat["games"])
                     try:
-                        rank = games_played / goals + shots + assists
+                        rank = 23 / goals + shots + assists
                     except: # exception for the division by zero error for when there's no stats
                         rank = 0
                     new_row = {'Name':fullname, 'Games Played':games_played, 'Time On Ice':toi, 'Assists':assists, 'Goals':goals, 'Shots':shots, 'Rank':rank}
@@ -244,44 +284,50 @@ def menu():
                     shs_percentage = float(stats2["shortHandedSavePercentage"])
                     ess_percentage = float(stats2["evenStrengthSavePercentage"])
                     try:
-                        ranks = games / pps_percentage + shs_percentage + ess_percentage + games
+                        ranks = 23 / pps_percentage + shs_percentage + ess_percentage + games
                     except:
                         ranks = 0
                     new_row = {'Name':fullname, 'Games Played':games, 'Power Play Saves':pp_saves, 'Shots Against':shots_against, 'Goals Against':goals_against, 'Rank':ranks}
                     goalie_df = goalie_df.append(new_row, ignore_index=True)
+            return goalie_df
                     
-
-    def clear_data():
-        tv1.delete(*tv1.get_children())
-        return None
-
     df = get_player_data(get_player_ids, df)
-    clear_data()
-    tv1["column"] = list(df.columns)
-    tv1["show"] = "headings"
-    for column in tv1["columns"]:
-        tv1.heading(column, text=column) 
+    goalie_df = get_goalie_data(get_goalie_ids, goalie_df)
 
-    df_rows = df.to_numpy().tolist() 
-    for row in df_rows:
-        tv1.insert("", "end", values=row) 
-    with pd.option_context('display.max_rows', None, 'display.max_columns', None):
-        goalie_df = goalie_df.sort_values(by=['Rank'], ascending=False)
-        print(goalie_df)
-
-    df.set_index("Name")
+    t = Label(root, text = "NHL Player Analysis", font = "Helvetica 12 bold", bg="white")
+    t.pack()
+    t2 = Label(root, text = "", bg = "white")
+    t2.pack()
+    t3 = Label(root, text = "All data is stored in pandas dataframes. Select either to analyse a roster or an individual player.", font = "Helvetica 12 bold", bg = "white")
+    t3.pack()
 
     btn = Button(root,
              text ="Analyse individual player data",
              command = lambda : individual_player_data(get_player_ids, individual_df, get_goalie_ids))
     btn.pack(pady = 10)
-    btn.place(x=770, y=350)  
+    btn.place(x=450, y=350)  
 
     btn2 = Button(root,
-             text ="Analyse player data",
+             text ="Analyse player roster data",
              command = lambda : show(df))
     btn2.pack(pady = 10)
-    btn2.place(x=770, y=300)
+    btn2.place(x=450, y=300)
+
+    btn2 = Button(root,
+             text ="Analyse goalie roster data",
+             command = lambda : show(goalie_df))
+    btn2.pack(pady = 10)
+    btn2.place(x=450, y=400)
+
+    frame = Frame(root, width=300, height=200)
+    frame.pack()
+    frame.place(anchor='center', relx=0.2, rely=0.8)
+
+    img = Image.open("NHL-Logo.png")
+    img = img.resize((300, 200), Image.ANTIALIAS)
+    img = ImageTk.PhotoImage(img)
+    pic = Label(frame, image = img)
+    pic.pack()
 
     root.mainloop()
 
