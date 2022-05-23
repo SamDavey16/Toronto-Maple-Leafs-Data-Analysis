@@ -292,7 +292,7 @@ def menu():
         show(goalie_df)
                     
     df = get_player_data(get_player_ids, df)
-    goalie_df = get_goalie_data(get_goalie_ids, goalie_df)
+    #goalie_df = get_goalie_data(get_goalie_ids, goalie_df)
 
     t = Label(root, text = "NHL Player Analysis", font = "Helvetica 12 bold", bg="white")
     t.pack()
@@ -313,11 +313,11 @@ def menu():
     btn2.pack(pady = 10)
     btn2.place(x=450, y=300)
 
-    btn2 = Button(root,
+    btn3 = Button(root,
              text ="Analyse goalie roster data",
              command = lambda : get_goalie_data(get_goalie_ids, goalie_df))
-    btn2.pack(pady = 10)
-    btn2.place(x=450, y=400)
+    btn3.pack(pady = 10)
+    btn3.place(x=450, y=400)
 
     frame = Frame(root, width=300, height=200)
     frame.pack()
