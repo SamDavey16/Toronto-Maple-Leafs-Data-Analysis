@@ -289,7 +289,7 @@ def menu():
                         ranks = 0
                     new_row = {'Name':fullname, 'Games Played':games, 'Power Play Saves':pp_saves, 'Shots Against':shots_against, 'Goals Against':goals_against, 'Rank':ranks}
                     goalie_df = goalie_df.append(new_row, ignore_index=True)
-            return goalie_df
+        show(goalie_df)
                     
     df = get_player_data(get_player_ids, df)
     goalie_df = get_goalie_data(get_goalie_ids, goalie_df)
@@ -315,7 +315,7 @@ def menu():
 
     btn2 = Button(root,
              text ="Analyse goalie roster data",
-             command = lambda : show(goalie_df))
+             command = lambda : get_goalie_data(get_goalie_ids, goalie_df))
     btn2.pack(pady = 10)
     btn2.place(x=450, y=400)
 
