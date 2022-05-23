@@ -292,7 +292,6 @@ def menu():
         show(goalie_df)
                     
     df = get_player_data(get_player_ids, df)
-    #goalie_df = get_goalie_data(get_goalie_ids, goalie_df)
 
     t = Label(root, text = "NHL Player Analysis", font = "Helvetica 12 bold", bg="white")
     t.pack()
